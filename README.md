@@ -159,6 +159,22 @@ lock, so two builds install the same.
   is in its `package.json`), one not built with Vite, and one that takes packages of a workspace of its repository
   (`"workspace:"` in its `package.json`).
 
+**A folder that cannot build from itself.** Headless UI's own Vue playground is a real app from a repository of several
+packages, and the example of what the builder does when a folder needs more of its repository than itself:
+
+```bash
+bash cmd-headless-ui-project.sh huivue --install --source https://github.com/tailwindlabs/headlessui --ref @headlessui/vue@v1.7.23 --path packages/playground-vue --vite-build
+```
+
+The builder checks out only `packages/playground-vue` at that tag, installs it with npm with no lock of its own
+(`--legacy-peer-deps`) and builds it with Vite; the build stops with Vite's own message,
+`Rollup failed to resolve import "@popperjs/core" from "src/playground-utils/hooks/use-popper.js"`, and the builder
+says that the app's build failed and serves nothing. In its repository the playground takes `@popperjs/core` from the
+repository's root and `@headlessui/tailwindcss` (which its `tailwind.config.js` requires) from the repository's own
+packages, and neither is in its `package.json`. To build it, add the two to the app's `package.json` in your fork
+(`@popperjs/core` ^2.11.8 and `@headlessui/tailwindcss` ^0.2.2, the releases the step pack's Vue site is built with) and
+give the builder your fork.
+
 The project's folder holds the app's source in `app/` and its production build in `app/dist/`. After a change to the
 app, build it again in the container the way the builder did (`npx vite build` for the demo, the starter and
 `--vite-build`; `npm run build` for an app of your own) and restart the project, so its server serves the new build:
@@ -209,9 +225,9 @@ database, so on Kubernetes it needs core 1.0.35 or newer (webship/workspace#884)
 
 | Runtime | The address of the app | Proven with this builder |
 | --- | --- | --- |
-| DDEV (the default) | `https://<name>.ddev.site` | Not run yet: the templates take `@webship-js/headless-ui-steps` 2.0.0 from npm |
-| Docker Compose (`--runtime docker`) | `http://127.0.0.1:<port>`, a free port kept in `compose.yaml` | Not run yet |
-| Podman (`--runtime podman`) | `http://127.0.0.1:<port>` | Not run yet |
+| DDEV (the default) | `https://<name>.ddev.site` | The demo template built and served in 1 min 16 s (Node.js 24 in DDEV's web container: `@webship-js/headless-ui-steps` 2.0.0 from npm, its assemble script at Headless UI 2.2.10, `npm ci` from the demo's lock, `vite build`), answering 200 at its root and at a deep path, drawn in 82 ms; the testing setup from npm (`@webship-js/headless-ui-steps` 2.0.0, webship-js 2.0.19) and its first feature (4 scenarios, 19 steps), and the skill's examples for the demo: its components (5 scenarios, 30 steps) and its lists (4 scenarios, 28 steps). `--source` with Headless UI's Vue playground (above): the sparse clone of its folder, the install with no lock (`--legacy-peer-deps`) and Vite's build ran, and the build stopped at the playground's missing `@popperjs/core`, with Vite's own message |
+| Docker Compose (`--runtime docker`) | `http://127.0.0.1:<port>`, a free port kept in `compose.yaml` | The demo template (the one CI builds for the features) built in 24 s, its files the host user's, drawn in 75 ms; the testing setup and its first feature (4 scenarios, 19 steps) |
+| Podman (`--runtime podman`) | `http://127.0.0.1:<port>` | The starter alone (`--template minimal`) built in 1 min 3 s with Node.js's own image, its files the host user's, drawn in 67 ms; the testing setup (no first feature: not the demo) and the skill's starter example (2 scenarios, 15 steps) |
 | Kubernetes (`--runtime kubernetes`) | `http://<node address>:<NodePort>` | Not run yet |
 
 A project of the builder is known by DDEV's file on DDEV and by its claim on another runtime, so the testing setup,

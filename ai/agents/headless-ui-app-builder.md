@@ -45,6 +45,13 @@ the page of form fields. An app of your own is a Vite app with `@headlessui/reac
 `package.json` and its packages its own (npm, pnpm or yarn); with `--path` only its folder of the repository is checked
 out.
 
+A folder of a repository of several packages may need more of its repository than itself. Headless UI's own Vue
+playground (`--source https://github.com/tailwindlabs/headlessui --ref @headlessui/vue@v1.7.23 --path
+packages/playground-vue --vite-build`) imports `@popperjs/core` and its `tailwind.config.js` requires
+`@headlessui/tailwindcss`: its repository supplies both, its `package.json` lists neither, so its build stops at
+`Rollup failed to resolve import "@popperjs/core"`. Add such packages to the app's `package.json` in a fork, and build
+the fork.
+
 The app's source is in `<project>/app/`, its production build in `<project>/app/dist/`, served at
 `https://<project>.ddev.site` (on Docker Compose, Podman or Kubernetes, at the address the build prints). The builder
 deletes a project of the same name first. It builds the demo and the starter with Vite (`vite build`), and an app of
